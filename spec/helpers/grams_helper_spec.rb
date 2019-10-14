@@ -20,46 +20,51 @@ RSpec.describe GramsController, type: :controller do
 
   describe "grams#new action" do
     it "should successfully show the new form" do
-       user = User.create(
-        email:                 'fakeuser@gmail.com',
-        password:              'secretPassword',
-        password_confirmation: 'secretPassword'
+     user = User.create(
+      email:                 'fakeuser@gmail.com',
+      password:              'secretPassword',
+      password_confirmation: 'secretPassword'
       )
-      sign_in user
+     sign_in user
 
-      get :new
-      expect(response).to have_http_status(:success)
-    end
+     get :new
+     expect(response).to have_http_status(:success)
+   end
+ end
+
+ describe "grams#create action" do
+  it "should successfully create a new gram in our db" do
+    user = User.create(
+      email:                 'fakeuser@gmail.com',
+      password:              'secretPassword',
+      password_confirmation: 'secretPassword'
+      )
+    sign_in user
+
+    post :create, params: {
+      gram: {
+        message: 'Hello!',
+        image: fixture_file_upload("/picture.png", 'image/png')
+      }
+    }
+    expect(response).to redirect_to root_path
+
+    gram = Gram.last
+    expect(gram.message).to eq("Hello!")
+    expect(gram.user).to eq(user)
   end
 
-  describe "grams#create action" do
-    it "should successfully create a new gram in our db" do
-      user = User.create(
-        email:                 'fakeuser@gmail.com',
-        password:              'secretPassword',
-        password_confirmation: 'secretPassword'
+  it "should properly deal with validation errors" do
+    user = User.create(
+      email:                 'fakeuser@gmail.com',
+      password:              'secretPassword',
+      password_confirmation: 'secretPassword'
       )
-      sign_in user
-
-      post :create, params: { gram: { message: 'Hello!' } }
-      expect(response).to redirect_to root_path
-
-      gram = Gram.last
-      expect(gram.message).to eq("Hello!")
-      expect(gram.user).to eq(user)
-    end
-
-      it "should properly deal with validation errors" do
-        user = User.create(
-          email:                 'fakeuser@gmail.com',
-          password:              'secretPassword',
-          password_confirmation: 'secretPassword'
-      )
-      sign_in user
-      gram_count = Gram.count
-        post :create, params: { gram: { message: '' } }
-        expect(response).to have_http_status(:unprocessable_entity)
-        expect(gram_count).to eq Gram.count
-      end
+    sign_in user
+    gram_count = Gram.count
+    post :create, params: { gram: { message: '' } }
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(gram_count).to eq Gram.count
   end
+end
 end
